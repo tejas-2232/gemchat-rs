@@ -12,6 +12,8 @@
     // Widget state
     let isOpen = false;
     let isLoading = false;
+    let lastRequestTime = 0;
+    const MIN_REQUEST_INTERVAL = 3000; // 3 seconds between requests
 
     // Create widget HTML structure
     function createWidget() {
@@ -248,19 +250,30 @@
             </style>
 
             <button id="cyber-chatbot-button" aria-label="Open chatbot">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12c0 1.54.36 3 .97 4.29L2 22l5.71-.97C9 21.64 10.46 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18c-1.38 0-2.68-.31-3.85-.87l-.28-.14-2.85.48.48-2.85-.14-.28A7.93 7.93 0 014 12c0-4.41 3.59-8 8-8s8 3.59 8 8-3.59 8-8 8zm-1-11h2v2h-2zm0 4h2v6h-2z"/>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
+                    <!-- Robot head -->
+                    <rect x="6" y="8" width="12" height="10" rx="2" stroke="white" stroke-width="0.5"/>
+                    <!-- Antenna -->
+                    <line x1="12" y1="4" x2="12" y2="8" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                    <circle cx="12" cy="3" r="1.5" fill="white"/>
+                    <!-- Eyes -->
+                    <circle cx="9" cy="12" r="1.5" fill="white"/>
+                    <circle cx="15" cy="12" r="1.5" fill="white"/>
+                    <!-- Mouth/display -->
+                    <rect x="8.5" y="15" width="7" height="1.5" rx="0.75" fill="white" opacity="0.8"/>
+                    <!-- Body connection -->
+                    <rect x="11" y="18" width="2" height="2" fill="white"/>
                 </svg>
             </button>
 
             <div id="cyber-chatbot-window">
                 <div class="chatbot-header">
-                    <h3>🔒 Cybersecurity Assistant</h3>
+                    <h3>🤖 Cybersecurity AI Assistant</h3>
                     <button class="chatbot-close" aria-label="Close chatbot">&times;</button>
                 </div>
                 <div class="chatbot-messages" id="chatbot-messages">
                     <div class="welcome-message">
-                        👋 Hello! I'm here to help you understand cybersecurity concepts and terminology. Ask me anything!
+                        🤖 Hello! I'm your AI-powered cybersecurity tutor. I can help you understand security concepts, attack types, and terminology. Ask me anything!
                     </div>
                 </div>
                 <div class="chatbot-input-area">
@@ -316,6 +329,15 @@
 
         if (!message || isLoading) return;
 
+        // Rate limiting check
+        const now = Date.now();
+        if (now - lastRequestTime < MIN_REQUEST_INTERVAL) {
+            const waitTime = Math.ceil((MIN_REQUEST_INTERVAL - (now - lastRequestTime)) / 1000);
+            addMessage(`Please wait ${waitTime} second(s) before sending another message to avoid rate limits.`, 'bot');
+            return;
+        }
+        lastRequestTime = now;
+
         // Add user message to chat
         addMessage(message, 'user');
         input.value = '';
@@ -359,13 +381,48 @@
         
         const bubble = document.createElement('div');
         bubble.className = 'message-bubble';
-        bubble.textContent = text;
+        bubble.innerHTML = formatMessage(text);
         
         messageDiv.appendChild(bubble);
         messagesContainer.appendChild(messageDiv);
         
         // Scroll to bottom
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Format message with basic markdown support
+    function formatMessage(text) {
+        // Escape HTML to prevent XSS
+        const escaped = text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+        
+        // Convert markdown-like formatting
+        let formatted = escaped
+            // Bold text: **text** or __text__
+            .replace(/\*\*([^\*]+)\*\*/g, '<strong>$1</strong>')
+            .replace(/__([^_]+)__/g, '<strong>$1</strong>')
+            // Italic text: *text* or _text_
+            .replace(/\*([^\*]+)\*/g, '<em>$1</em>')
+            .replace(/_([^_]+)_/g, '<em>$1</em>')
+            // Inline code: `code`
+            .replace(/`([^`]+)`/g, '<code style="background: #f0f0f0; padding: 2px 4px; border-radius: 3px; font-family: monospace;">$1</code>')
+            // Line breaks
+            .replace(/\n/g, '<br>');
+        
+        // Code blocks: ```code```
+        formatted = formatted.replace(/```([^`]+)```/g, '<pre style="background: #f5f5f5; padding: 8px; border-radius: 4px; overflow-x: auto; margin: 8px 0;"><code>$1</code></pre>');
+        
+        // Numbered lists
+        formatted = formatted.replace(/^(\d+)\.\s+(.+)$/gm, '<div style="margin-left: 16px;">$1. $2</div>');
+        
+        // Bullet points
+        formatted = formatted.replace(/^[•\-\*]\s+(.+)$/gm, '<div style="margin-left: 16px;">• $1</div>');
+        
+        return formatted;
     }
 
     // Show typing indicator
