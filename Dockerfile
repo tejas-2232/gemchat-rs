@@ -1,5 +1,5 @@
 # Build stage
-FROM rust:1.75 as builder
+FROM rust:1.83 AS builder
 
 WORKDIR /app
 
@@ -7,6 +7,7 @@ WORKDIR /app
 COPY Cargo.toml ./
 
 # Create a dummy main.rs to build dependencies
+#used for faster rebuilds 
 RUN mkdir src && \
     echo "fn main() {}" > src/main.rs && \
     cargo build --release && \
@@ -30,10 +31,11 @@ RUN apt-get update && \
 WORKDIR /app
 
 # Copy the binary from builder
-COPY --from=builder /app/target/release/cybersecurity-chatbot /app/chatbot
+COPY --from=builder /app/target/release/helper-chatbot /app/chatbot
 COPY --from=builder /app/static /app/static
 
-# Set environment variables
+# Note: .env file is NOT copied - use environment variables from docker-compose
+# Set default environment variables
 ENV RUST_LOG=info
 ENV PORT=8080
 
@@ -42,4 +44,3 @@ EXPOSE 8080
 
 # Run the binary
 CMD ["/app/chatbot"]
-
