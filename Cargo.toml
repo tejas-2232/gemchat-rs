@@ -12,8 +12,8 @@ tower-http = { version = "0.5", features = ["fs", "cors"] }
 # Async runtime
 tokio = { version = "1", features = ["full"] }
 
-# Gemini AI client
-gemini-rust = "1.4.0"
+# HTTP client for Gemini API
+reqwest = { version = "0.11", features = ["json"] }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
@@ -28,4 +28,3 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Error handling
 anyhow = "1.0"
-
