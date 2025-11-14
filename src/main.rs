@@ -4,7 +4,7 @@ mod models;
 use axum::{
     extract::State,
     http::{Method, StatusCode},
-    response::{Html, IntoResponse, Json},
+    response::{IntoResponse, Json},
     routing::{get, post},
     Router,
 };
@@ -34,13 +34,16 @@ async fn main() -> anyhow::Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    // Load environment variables
+    // Load environment variables from .env file if present (for local development)
     dotenvy::dotenv().ok();
 
     // Get configuration from environment
+    info!("Loading configuration from environment variables...");
     let api_key = std::env::var("GEMINI_API_KEY")
         .expect("GEMINI_API_KEY must be set in environment or .env file");
+    info!("API key loaded successfully (length: {} chars)", api_key.len());
     let port = std::env::var("PORT").unwrap_or_else(|_| "8080".to_string());
+    info!("Using port: {}", port);
 
     // Initialize Gemini client
     let gemini_client = GeminiClient::new(api_key)?;
