@@ -1,46 +1,57 @@
-# Build stage
-FROM rust:1.83 AS builder
+# syntax=docker/dockerfile:1
 
+ARG RUST_VERSION=1.83
+ARG APP_NAME=helper-chatbot
+
+################################################################################
+# Build stage
+################################################################################
+FROM rust:${RUST_VERSION}-slim-bookworm AS builder
+ARG APP_NAME
 WORKDIR /app
 
-# Copy manifests
-COPY Cargo.toml ./
+# Install build dependencies (for reqwest/native-tls -> OpenSSL)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        pkg-config \
+        libssl-dev \
+        ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
-# Create a dummy main.rs to build dependencies
-#used for faster rebuilds 
-RUN mkdir src && \
-    echo "fn main() {}" > src/main.rs && \
+# Cache dependencies by compiling with a dummy main first
+COPY Cargo.toml Cargo.lock ./
+RUN mkdir src && echo "fn main() {}" > src/main.rs && \
     cargo build --release && \
-    rm -rf src
+    rm -rf src target/release
 
-# Copy source code
+# Copy source and assets
 COPY src ./src
 COPY static ./static
 
-# Build the application
-RUN cargo build --release
+# Build the real application
+RUN cargo build --release --bin ${APP_NAME}
 
+################################################################################
 # Runtime stage
-FROM debian:bookworm-slim
+################################################################################
+FROM debian:bookworm-slim AS runtime
 
-# Install required runtime dependencies
+# Only the runtime bits we need
 RUN apt-get update && \
-    apt-get install -y ca-certificates libssl3 && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        libssl3 && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy the binary from builder
-COPY --from=builder /app/target/release/helper-chatbot /app/chatbot
-COPY --from=builder /app/static /app/static
+# Copy compiled binary and static assets
+ARG APP_NAME=helper-chatbot
+COPY --from=builder /app/target/release/${APP_NAME} /app/chatbot
+COPY static ./static
 
-# Note: .env file is NOT copied - use environment variables from docker-compose
-# Set default environment variables
 ENV RUST_LOG=info
 ENV PORT=8080
 
-# Expose the port
 EXPOSE 8080
-
-# Run the binary
 CMD ["/app/chatbot"]
