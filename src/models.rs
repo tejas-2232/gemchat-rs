@@ -21,6 +21,8 @@ pub struct ErrorResponse {
     pub error: String,
 }
 
+// The new() function is a helper to easily create error messages:
+
 impl ErrorResponse {
     pub fn new(error: impl Into<String>) -> Self {
         Self {
