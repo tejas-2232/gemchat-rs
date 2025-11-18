@@ -1,17 +1,35 @@
+ARG RUST_VERSION=1.83
+ARG APP_NAME=helper-chatbot
+
+
 # Build stage
-FROM rust:1.83 AS builder
+
+FROM rust:${RUST_VERSION}-slim-bookworm AS builder
+
+ARG APP_NAME
+RUN echo "Building ${APP_NAME} with Rust ${RUST_VERSION}"
 
 WORKDIR /app
 
-# Copy manifests
-COPY Cargo.toml ./
+#install build dependencies (for reqwest/native-tls -> OpenSSL)
 
-# Create a dummy main.rs to build dependencies
-#used for faster rebuilds 
-RUN mkdir src && \
-    echo "fn main() {}" > src/main.rs && \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        pkg-config \
+        libssl-dev && \
+        ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+
+
+# cache dependencies by compiling with a dummy main first
+
+COPY Cargo.toml Cargo.lock ./
+RUN mkdir src && echo "fn main() {}" > src/main.rs && \
     cargo build --release && \
-    rm -rf src
+    rm -rf src target/release
+
+
 
 # Copy source code
 COPY src ./src
