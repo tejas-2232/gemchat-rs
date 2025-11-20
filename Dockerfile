@@ -36,10 +36,13 @@ COPY src ./src
 COPY static ./static
 
 # Build the application
-RUN cargo build --release
+RUN cargo build --release --bin ${APP_NAME}
 
+#########################################################
 # Runtime stage
-FROM debian:bookworm-slim
+#########################################################
+
+FROM debian:bookworm-slim AS runtime
 
 # Install required runtime dependencies
 RUN apt-get update && \
@@ -48,9 +51,11 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-# Copy the binary from builder
-COPY --from=builder /app/target/release/helper-chatbot /app/chatbot
-COPY --from=builder /app/static /app/static
+# Copy compiled binary and static files
+ARG APP_NAME=helper-chatbot
+
+COPY --from=builder /app/target/release/${APP_NAME} /app/chatbot
+COPY static ./static
 
 # Note: .env file is NOT copied - use environment variables from docker-compose
 # Set default environment variables
