@@ -12,6 +12,7 @@
     // Widget state
     let isOpen = false;
     let isLoading = false;
+    let isMaximized = false;
     let lastRequestTime = 0;
     const MIN_REQUEST_INTERVAL = 3000; // 3 seconds between requests
 
@@ -84,6 +85,18 @@
                     display: flex;
                 }
 
+                #cyber-chatbot-window.maximized {
+                    width: 90vw;
+                    height: 90vh;
+                    bottom: 5vh;
+                    right: 5vw;
+                    max-width: none;
+                }
+
+                #cyber-chatbot-window.maximized .chatbot-messages {
+                    max-height: none;
+                }
+
                 .chatbot-header {
                     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                     color: white;
@@ -97,20 +110,35 @@
                     margin: 0;
                     font-size: 16px;
                     font-weight: 600;
+                    flex: 1;
                 }
 
+                .chatbot-header-buttons {
+                    display: flex;
+                    gap: 12px;
+                    align-items: center;
+                }
+
+                .chatbot-maximize,
                 .chatbot-close {
                     background: none;
                     border: none;
                     color: white;
-                    font-size: 24px;
+                    font-size: 20px;
                     cursor: pointer;
-                    padding: 0;
-                    width: 24px;
-                    height: 24px;
+                    padding: 4px;
+                    width: 28px;
+                    height: 28px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
+                    border-radius: 4px;
+                    transition: background 0.2s;
+                }
+
+                .chatbot-maximize:hover,
+                .chatbot-close:hover {
+                    background: rgba(255, 255, 255, 0.2);
                 }
 
                 .chatbot-messages {
@@ -246,6 +274,14 @@
                         right: 20px;
                         bottom: 90px;
                     }
+
+                    #cyber-chatbot-window.maximized {
+                        width: 100vw;
+                        height: 100vh;
+                        bottom: 0;
+                        right: 0;
+                        border-radius: 0;
+                    }
                 }
             </style>
 
@@ -269,7 +305,15 @@
             <div id="cyber-chatbot-window">
                 <div class="chatbot-header">
                     <h3>🤖 Cybersecurity AI Assistant</h3>
-                    <button class="chatbot-close" aria-label="Close chatbot">&times;</button>
+                    <div class="chatbot-header-buttons">
+                        <button class="chatbot-maximize" id="chatbot-maximize" aria-label="Maximize chatbot" title="Maximize">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 3h10v10H3V3z" stroke="currentColor" stroke-width="2" fill="none"/>
+                                <path d="M5 1h8v2M13 5v8h-2" stroke="currentColor" stroke-width="1.5"/>
+                            </svg>
+                        </button>
+                        <button class="chatbot-close" aria-label="Close chatbot">&times;</button>
+                    </div>
                 </div>
                 <div class="chatbot-messages" id="chatbot-messages">
                     <div class="welcome-message">
@@ -297,11 +341,13 @@
     function attachEventListeners() {
         const button = document.getElementById('cyber-chatbot-button');
         const closeBtn = document.querySelector('.chatbot-close');
+        const maximizeBtn = document.getElementById('chatbot-maximize');
         const sendBtn = document.getElementById('chatbot-send-btn');
         const input = document.getElementById('chatbot-input');
 
         button.addEventListener('click', toggleWidget);
         closeBtn.addEventListener('click', toggleWidget);
+        maximizeBtn.addEventListener('click', toggleMaximize);
         sendBtn.addEventListener('click', sendMessage);
         input.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !isLoading) {
@@ -319,6 +365,39 @@
             document.getElementById('chatbot-input').focus();
         } else {
             window.classList.remove('open');
+            // Reset maximize state when closing
+            if (isMaximized) {
+                toggleMaximize();
+            }
+        }
+    }
+
+    // Toggle maximize/minimize
+    function toggleMaximize() {
+        isMaximized = !isMaximized;
+        const window = document.getElementById('cyber-chatbot-window');
+        const maximizeBtn = document.getElementById('chatbot-maximize');
+        
+        if (isMaximized) {
+            window.classList.add('maximized');
+            maximizeBtn.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 6H3v7h7v-3" stroke="currentColor" stroke-width="2" fill="none"/>
+                    <path d="M7 7h6v6H7V7z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                </svg>
+            `;
+            maximizeBtn.setAttribute('title', 'Restore');
+            maximizeBtn.setAttribute('aria-label', 'Restore chatbot size');
+        } else {
+            window.classList.remove('maximized');
+            maximizeBtn.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 3h10v10H3V3z" stroke="currentColor" stroke-width="2" fill="none"/>
+                    <path d="M5 1h8v2M13 5v8h-2" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+            `;
+            maximizeBtn.setAttribute('title', 'Maximize');
+            maximizeBtn.setAttribute('aria-label', 'Maximize chatbot');
         }
     }
 
