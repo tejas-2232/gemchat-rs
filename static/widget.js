@@ -13,6 +13,7 @@
     let isOpen = false;
     let isLoading = false;
     let isMaximized = false;
+    let isDarkMode = localStorage.getItem('chatbot-theme') === 'dark';
     let lastRequestTime = 0;
     const MIN_REQUEST_INTERVAL = 3000; // 3 seconds between requests
 
@@ -115,10 +116,11 @@
 
                 .chatbot-header-buttons {
                     display: flex;
-                    gap: 12px;
+                    gap: 8px;
                     align-items: center;
                 }
 
+                .chatbot-theme-toggle,
                 .chatbot-maximize,
                 .chatbot-close {
                     background: none;
@@ -133,19 +135,41 @@
                     align-items: center;
                     justify-content: center;
                     border-radius: 4px;
-                    transition: background 0.2s;
+                    transition: all 0.3s;
                 }
 
+                .chatbot-theme-toggle:hover,
                 .chatbot-maximize:hover,
                 .chatbot-close:hover {
                     background: rgba(255, 255, 255, 0.2);
+                    transform: scale(1.1);
                 }
 
                 .chatbot-messages {
                     flex: 1;
                     overflow-y: auto;
                     padding: 16px;
-                    background: #f9fafb;
+                    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                    position: relative;
+                }
+
+                .chatbot-messages::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: 
+                        radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.05) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.05) 0%, transparent 50%);
+                    pointer-events: none;
+                    animation: bgFloat 10s ease-in-out infinite;
+                }
+
+                @keyframes bgFloat {
+                    0%, 100% { opacity: 0.3; transform: translateY(0px); }
+                    50% { opacity: 0.6; transform: translateY(-10px); }
                 }
 
                 .chatbot-message {
@@ -175,13 +199,69 @@
                     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                     color: white;
                     border-bottom-right-radius: 4px;
+                    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
                 }
 
                 .chatbot-message.bot .message-bubble {
-                    background: white;
+                    background: rgba(255, 255, 255, 0.95);
+                    backdrop-filter: blur(10px);
                     color: #1f2937;
                     border-bottom-left-radius: 4px;
-                    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                }
+
+                /* Dark Mode Styles */
+                #cyber-chatbot-window.dark-mode {
+                    background: #1e1e2e;
+                }
+
+                #cyber-chatbot-window.dark-mode .chatbot-header {
+                    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+                }
+
+                #cyber-chatbot-window.dark-mode .chatbot-messages {
+                    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+                }
+
+                #cyber-chatbot-window.dark-mode .chatbot-messages::before {
+                    background: 
+                        radial-gradient(circle at 20% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+                }
+
+                #cyber-chatbot-window.dark-mode .chatbot-message.bot .message-bubble {
+                    background: rgba(30, 41, 59, 0.95);
+                    color: #e2e8f0;
+                    border: 1px solid rgba(71, 85, 105, 0.5);
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+                }
+
+                #cyber-chatbot-window.dark-mode .chatbot-input-area {
+                    background: #1e293b;
+                    border-top: 1px solid #334155;
+                }
+
+                #cyber-chatbot-window.dark-mode .chatbot-input {
+                    background: #0f172a;
+                    border: 1px solid #334155;
+                    color: #e2e8f0;
+                }
+
+                #cyber-chatbot-window.dark-mode .chatbot-input::placeholder {
+                    color: #64748b;
+                }
+
+                #cyber-chatbot-window.dark-mode .chatbot-input:focus {
+                    border-color: #8b5cf6;
+                }
+
+                #cyber-chatbot-window.dark-mode .welcome-message {
+                    color: #94a3b8;
+                }
+
+                #cyber-chatbot-window.dark-mode .typing-indicator span {
+                    background: #64748b;
                 }
 
                 .chatbot-input-area {
@@ -306,6 +386,19 @@
                 <div class="chatbot-header">
                     <h3>🤖 Cybersecurity AI Assistant</h3>
                     <div class="chatbot-header-buttons">
+                        <button class="chatbot-theme-toggle" id="chatbot-theme-toggle" aria-label="Toggle theme" title="Toggle Dark/Light Mode">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="5"></circle>
+                                <line x1="12" y1="1" x2="12" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="23"></line>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                <line x1="1" y1="12" x2="3" y2="12"></line>
+                                <line x1="21" y1="12" x2="23" y2="12"></line>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                            </svg>
+                        </button>
                         <button class="chatbot-maximize" id="chatbot-maximize" aria-label="Maximize chatbot" title="Maximize">
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M3 3h10v10H3V3z" stroke="currentColor" stroke-width="2" fill="none"/>
@@ -341,12 +434,14 @@
     function attachEventListeners() {
         const button = document.getElementById('cyber-chatbot-button');
         const closeBtn = document.querySelector('.chatbot-close');
+        const themeToggleBtn = document.getElementById('chatbot-theme-toggle');
         const maximizeBtn = document.getElementById('chatbot-maximize');
         const sendBtn = document.getElementById('chatbot-send-btn');
         const input = document.getElementById('chatbot-input');
 
         button.addEventListener('click', toggleWidget);
         closeBtn.addEventListener('click', toggleWidget);
+        themeToggleBtn.addEventListener('click', toggleTheme);
         maximizeBtn.addEventListener('click', toggleMaximize);
         sendBtn.addEventListener('click', sendMessage);
         input.addEventListener('keypress', (e) => {
@@ -354,6 +449,12 @@
                 sendMessage();
             }
         });
+
+        // Apply saved theme on load
+        if (isDarkMode) {
+            document.getElementById('cyber-chatbot-window').classList.add('dark-mode');
+            updateThemeIcon();
+        }
     }
 
     // Toggle widget open/close
@@ -369,6 +470,53 @@
             if (isMaximized) {
                 toggleMaximize();
             }
+        }
+    }
+
+    // Toggle dark/light theme
+    function toggleTheme() {
+        isDarkMode = !isDarkMode;
+        const window = document.getElementById('cyber-chatbot-window');
+        
+        if (isDarkMode) {
+            window.classList.add('dark-mode');
+            localStorage.setItem('chatbot-theme', 'dark');
+        } else {
+            window.classList.remove('dark-mode');
+            localStorage.setItem('chatbot-theme', 'light');
+        }
+        
+        updateThemeIcon();
+    }
+
+    // Update theme toggle icon
+    function updateThemeIcon() {
+        const themeToggleBtn = document.getElementById('chatbot-theme-toggle');
+        
+        if (isDarkMode) {
+            // Show moon icon for dark mode
+            themeToggleBtn.innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            `;
+            themeToggleBtn.setAttribute('title', 'Switch to Light Mode');
+        } else {
+            // Show sun icon for light mode
+            themeToggleBtn.innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+            `;
+            themeToggleBtn.setAttribute('title', 'Switch to Dark Mode');
         }
     }
 
