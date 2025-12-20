@@ -3,3 +3,4 @@
 Cargo.lock
 *.log
 
+docker-compose.debug.yml
