@@ -351,10 +351,8 @@ MIT License - feel free to use this in your educational projects!
 Try asking the chatbot:
 - "What is SQL injection?"
 - "Explain what a DDoS attack is"
-- "What's the difference between encryption and hashing?"
 - "What is cross-site scripting (XSS)?"
 - "How does a man-in-the-middle attack work?"
-- "What is a buffer overflow?"
 
 ---
 
