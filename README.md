@@ -353,6 +353,7 @@ Try asking the chatbot:
 - "Explain what a DDoS attack is"
 - "What is cross-site scripting (XSS)?"
 - "How does a man-in-the-middle attack work?"
+- "What is Trojan Horse"
 
 ---
 
