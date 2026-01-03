@@ -211,6 +211,35 @@
                     border: 1px solid rgba(255, 255, 255, 0.3);
                 }
 
+                /* Code formatting (light mode) */
+                .message-bubble .chatbot-inline-code {
+                    background: rgba(15, 23, 42, 0.06);
+                    color: inherit;
+                    padding: 2px 5px;
+                    border-radius: 4px;
+                    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+                    font-size: 0.95em;
+                }
+
+                .message-bubble pre.chatbot-code-block {
+                    background: #f8fafc;
+                    color: #0f172a;
+                    border: 1px solid #e2e8f0;
+                    padding: 10px 12px;
+                    border-radius: 8px;
+                    overflow-x: auto;
+                    margin: 8px 0;
+                    max-width: 100%;
+                }
+
+                .message-bubble pre.chatbot-code-block code {
+                    background: transparent;
+                    color: inherit;
+                    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+                    font-size: 12.5px;
+                    white-space: pre;
+                }
+
                 /* Dark Mode Styles */
                 #cyber-chatbot-window.dark-mode {
                     background: #1e1e2e;
@@ -235,6 +264,18 @@
                     color: #e2e8f0;
                     border: 1px solid rgba(71, 85, 105, 0.5);
                     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+                }
+
+                /* Code formatting (dark mode) */
+                #cyber-chatbot-window.dark-mode .message-bubble .chatbot-inline-code {
+                    background: rgba(226, 232, 240, 0.10);
+                    color: inherit;
+                }
+
+                #cyber-chatbot-window.dark-mode .message-bubble pre.chatbot-code-block {
+                    background: #0b1220;
+                    color: #e2e8f0;
+                    border: 1px solid #334155;
                 }
 
                 #cyber-chatbot-window.dark-mode .chatbot-input-area {
@@ -626,29 +667,56 @@
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
-        
-        // Convert markdown-like formatting
-        let formatted = escaped
+
+        // Protect code blocks and inline code from other formatting passes
+        const codeBlocks = [];
+        const inlineCodes = [];
+
+        let working = escaped.replace(/```([\s\S]*?)```/g, (_, code) => {
+            const idx = codeBlocks.length;
+            codeBlocks.push(code);
+            return `@@CHATBOT_CODEBLOCK_${idx}@@`;
+        });
+
+        working = working.replace(/`([^`]+)`/g, (_, code) => {
+            const idx = inlineCodes.length;
+            inlineCodes.push(code);
+            return `@@CHATBOT_INLINE_${idx}@@`;
+        });
+
+        // Convert markdown-like formatting (excluding code)
+        let formatted = working
             // Bold text: **text** or __text__
             .replace(/\*\*([^\*]+)\*\*/g, '<strong>$1</strong>')
             .replace(/__([^_]+)__/g, '<strong>$1</strong>')
             // Italic text: *text* or _text_
             .replace(/\*([^\*]+)\*/g, '<em>$1</em>')
-            .replace(/_([^_]+)_/g, '<em>$1</em>')
-            // Inline code: `code`
-            .replace(/`([^`]+)`/g, '<code style="background: #f0f0f0; padding: 2px 4px; border-radius: 3px; font-family: monospace;">$1</code>')
-            // Line breaks
-            .replace(/\n/g, '<br>');
-        
-        // Code blocks: ```code```
-        formatted = formatted.replace(/```([^`]+)```/g, '<pre style="background: #f5f5f5; padding: 8px; border-radius: 4px; overflow-x: auto; margin: 8px 0;"><code>$1</code></pre>');
-        
+            .replace(/_([^_]+)_/g, '<em>$1</em>');
+
         // Numbered lists
         formatted = formatted.replace(/^(\d+)\.\s+(.+)$/gm, '<div style="margin-left: 16px;">$1. $2</div>');
-        
+
         // Bullet points
         formatted = formatted.replace(/^[•\-\*]\s+(.+)$/gm, '<div style="margin-left: 16px;">• $1</div>');
-        
+
+        // Line breaks (after list transforms)
+        formatted = formatted.replace(/\n/g, '<br>');
+
+        // Restore inline code and code blocks with theme-aware classes
+        for (let i = 0; i < inlineCodes.length; i++) {
+            formatted = formatted.replace(
+                `@@CHATBOT_INLINE_${i}@@`,
+                `<code class="chatbot-inline-code">${inlineCodes[i]}</code>`
+            );
+        }
+
+        for (let i = 0; i < codeBlocks.length; i++) {
+            formatted = formatted.replace(
+                `@@CHATBOT_CODEBLOCK_${i}@@`,
+                `<pre class="chatbot-code-block"><code>${codeBlocks[i]}</code></pre>`
+            );
+        }
+
         return formatted;
     }
 
