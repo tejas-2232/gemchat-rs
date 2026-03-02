@@ -10,7 +10,6 @@ A standalone Rust microservice powered by Google Gemini AI that helps university
 - 🐳 **Docker Ready**: Easy deployment with Docker and Docker Compose
 - 🚀 **High Performance**: Built with Rust and async/await for maximum efficiency
 - 🌐 **CORS Enabled**: Works with any web application
-- 📊 **Structured Logging**: Built-in telemetry with tracing
 
 ## 📋 Prerequisites
 
