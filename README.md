@@ -19,6 +19,27 @@ A standalone Rust microservice powered by Google Gemini AI that helps university
 
 ## 🚀 Quick Start
 
+The instructions below work on any POSIX‑compatible platform, but if you're on Ubuntu you can follow the extra commands in the **Ubuntu setup** section for convenience.
+
+### Ubuntu setup (optional)
+
+```bash
+# clone and enter repository
+git clone <repo-url> && cd rust-chatbot
+
+# install dependencies if not already present
+sudo apt update
+sudo apt install -y docker.io docker-compose curl xdg-utils
+
+# add your user to the docker group so you don't need sudo
+sudo usermod -aG docker $USER
+# (you'll need to log out and back in afterward)
+
+# grab Rust (for local builds)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source $HOME/.cargo/env
+```
+
 ### Using Docker (Recommended)
 
 1. **Clone and configure**
@@ -41,7 +62,7 @@ The service will be available at `http://localhost:8080`
 
 ### Local Development
 
-1. **Install Rust** from [rustup.rs](https://rustup.rs)
+1. **Install Rust** from [rustup.rs](https://rustup.rs) (already handled above on Ubuntu)
 
 2. **Configure environment**
    ```bash
